@@ -1,0 +1,25 @@
+{
+	"name": "emby-apiclient",
+	"main": "index.js",
+	"authors": [
+		"The Emby Authors"
+	],
+	"version": "1.0.0",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/MediaBrowser/Emby.ApiClient.Javascript.git"
+	},
+	"license": "https://github.com/MediaBrowser/Emby.ApiClient.Javascript/blob/master/LICENSE",
+	"homepage": "https://github.com/MediaBrowser/Emby.ApiClient.Javascript",
+	"dependencies": {
+		"crypto-js": "^3.1.9-1",
+		"module-alias": "2.0.1",
+		"node-define": "0.1.1",
+		"node-fetch": "2.0.0-alpha.8",
+		"requirejs": ">= 0.27.1"
+	},
+	"devDependencies": {
+		
+	},
+	"ignore": []
+}
