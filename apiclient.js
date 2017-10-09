@@ -203,17 +203,28 @@
 
             this._serverAddress = val;
 
-            this.lastDetectedBitrate = 0;
-            this.lastDetectedBitrateTime = 0;
+            this.onNetworkChange();
 
             if (changed) {
                 events.trigger(this, 'serveraddresschanged');
             }
-
-            redetectBitrate(this);
         }
 
         return this._serverAddress;
+    };
+
+    function setSavedEndpointInfo(instance, info) {
+
+        instance._endPointInfo = info;
+    }
+
+    ApiClient.prototype.onNetworkChange = function () {
+
+        this.lastDetectedBitrate = 0;
+        this.lastDetectedBitrateTime = 0;
+        setSavedEndpointInfo(this, null);
+
+        redetectBitrate(this);
     };
 
     /**
@@ -492,9 +503,14 @@
         return this.fetch(request, includeAuthorization);
     };
 
-    function getCachedUser(userId) {
+    function getCachedUser(instance, userId) {
 
-        var json = appStorage.getItem('user-' + userId);
+        var serverId = instance.serverId();
+        if (!serverId) {
+            return null;
+        }
+
+        var json = appStorage.getItem('user-' + userId + '-' + serverId);
 
         if (json) {
             return JSON.parse(json);
@@ -522,7 +538,8 @@
         var user;
 
         var serverPromise = this.getUser(userId).then(function (user) {
-            appStorage.setItem('user-' + user.Id, JSON.stringify(user));
+
+            appStorage.setItem('user-' + user.Id + '-' + user.ServerId, JSON.stringify(user));
 
             instance._currentUser = user;
             return user;
@@ -533,7 +550,7 @@
             if (!response.status) {
 
                 if (userId && instance.accessToken()) {
-                    user = getCachedUser(userId);
+                    user = getCachedUser(instance, userId);
                     if (user) {
                         return Promise.resolve(user);
                     }
@@ -544,7 +561,7 @@
         });
 
         if (!this.lastFetch && enableCache !== false) {
-            user = getCachedUser(userId);
+            user = getCachedUser(instance, userId);
             if (user) {
                 return Promise.resolve(user);
             }
@@ -608,7 +625,8 @@
                 var postData = {
                     Password: CryptoJS.SHA1(password || "").toString(),
                     PasswordMd5: CryptoJS.MD5(password || "").toString(),
-                    Username: name
+                    Username: name,
+                    Pw: password
                 };
 
                 instance.ajax({
@@ -2821,8 +2839,10 @@
                     type: "POST",
                     url: url,
                     data: {
-                        currentPassword: CryptoJS.SHA1(currentPassword).toString(),
-                        newPassword: CryptoJS.SHA1(newPassword).toString()
+                        CurrentPassword: CryptoJS.SHA1(currentPassword).toString(),
+                        NewPassword: CryptoJS.SHA1(newPassword).toString(),
+                        CurrentPw: currentPassword,
+                        NewPw: newPassword
                     }
                 }).then(resolve, reject);
             });
@@ -2853,7 +2873,8 @@
                     type: "POST",
                     url: url,
                     data: {
-                        newPassword: CryptoJS.SHA1(newPassword).toString()
+                        newPassword: CryptoJS.SHA1(newPassword).toString(),
+                        NewPw: newPassword
                     }
                 }).then(resolve, reject);
             });
@@ -3145,6 +3166,24 @@
         }
 
         return this.getJSON(url);
+    };
+
+    ApiClient.prototype.getResumableItems = function (userId, options) {
+
+        if (this.isMinServerVersion('3.2.33')) {
+            return this.getJSON(this.getUrl("Users/" + userId + "/Items/Resume", options));
+        }
+
+        return this.getItems(userId, Object.assign({
+
+            SortBy: "DatePlayed",
+            SortOrder: "Descending",
+            Filters: "IsResumable",
+            Recursive: true,
+            CollapseBoxSetItems: false,
+            ExcludeLocationTypes: "Virtual"
+
+        }, options));
     };
 
     ApiClient.prototype.getMovieRecommendations = function (options) {
@@ -3849,9 +3888,24 @@
         });
     };
 
+    ApiClient.prototype.getSavedEndpointInfo = function () {
+
+        return this._endPointInfo;
+    };
+
     ApiClient.prototype.getEndpointInfo = function () {
 
-        return this.getJSON(this.getUrl('System/Endpoint'));
+        var savedValue = this._endPointInfo;
+        if (savedValue) {
+            return Promise.resolve(savedValue);
+        }
+
+        var instance = this;
+        return this.getJSON(this.getUrl('System/Endpoint')).then(function (endPointInfo) {
+
+            setSavedEndpointInfo(instance, endPointInfo);
+            return endPointInfo;
+        });
     };
 
     ApiClient.prototype.getLatestItems = function (options) {
@@ -3868,7 +3922,7 @@
         a = a.split('.');
         b = b.split('.');
 
-        for (var i = 0, length = Math.max(a.length, b.length) ; i < length; i++) {
+        for (var i = 0, length = Math.max(a.length, b.length); i < length; i++) {
             var aVal = parseInt(a[i] || '0');
             var bVal = parseInt(b[i] || '0');
 

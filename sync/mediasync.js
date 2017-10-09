@@ -339,9 +339,13 @@
 
         options = options || {};
 
-        return localassetmanager.downloadFile(url, localItem).then(function (filename) {
+        return localassetmanager.downloadFile(url, localItem).then(function (result) {
 
-            localItem.SyncStatus = 'transferring';
+            // result.path
+            // result.isComplete
+
+            localItem.SyncStatus = result.isComplete ? 'synced' : 'transferring';
+
             return localassetmanager.addOrUpdateLocalItem(localItem);
         });
     }
@@ -560,6 +564,7 @@
             }
 
             subtitleStream.Path = subtitlePath;
+            subtitleStream.DeliveryMethod = 'External';
             return localassetmanager.addOrUpdateLocalItem(localItem);
         });
     }
