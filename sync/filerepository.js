@@ -7,7 +7,7 @@
         return path;
     }
 
-    
+
     function getFullLocalPath(pathArray) {
 
         // TODO
@@ -38,6 +38,10 @@
         return Promise.resolve(0);
     }
 
+    function getImageUrl(pathParts) {
+        return pathParts.join('/');
+    }
+
     return {
         getValidFileName: getValidFileName,
         getFullLocalPath: getFullLocalPath,
@@ -45,6 +49,7 @@
         deleteFile: deleteFile,
         deleteDirectory: deleteDirectory,
         fileExists: fileExists,
-        getItemFileSize: getItemFileSize
+        getItemFileSize: getItemFileSize,
+        getImageUrl: getImageUrl
     };
 });

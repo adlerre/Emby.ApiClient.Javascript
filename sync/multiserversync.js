@@ -7,6 +7,7 @@
 
         if (index >= length) {
 
+            console.log('MultiServerSync.sync complete');
             resolve();
             return;
         }
@@ -17,9 +18,13 @@
 
         new ServerSync().sync(connectionManager, server, options).then(function () {
 
+            console.log("ServerSync succeeded to server: " + server.Id);
+
             syncNext(connectionManager, servers, index + 1, options, resolve, reject);
 
-        }, function () {
+        }, function (err) {
+
+            console.log("ServerSync failed to server: " + server.Id + '. ' + err);
 
             syncNext(connectionManager, servers, index + 1, options, resolve, reject);
         });

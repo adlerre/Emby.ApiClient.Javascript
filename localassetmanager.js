@@ -2,6 +2,9 @@
     'use strict';
 
     function getLocalItem(serverId, itemId) {
+
+        console.log('[lcoalassetmanager] Begin getLocalItem');
+
         return itemrepository.get(serverId, itemId);
     }
 
@@ -30,6 +33,8 @@
     }
 
     function getServerItems(serverId) {
+
+        console.log('[localassetmanager] Begin getServerItems');
 
         return itemrepository.getAll(serverId);
     }
@@ -61,7 +66,7 @@
             var list = [];
             var item;
 
-            if (types.indexOf('audio') > -1) {
+            if (types.indexOf('Audio') > -1) {
 
                 item = {
                     Name: 'Music',
@@ -75,7 +80,7 @@
                 list.push(item);
             }
 
-            if (types.indexOf('photo') > -1) {
+            if (types.indexOf('Photo') > -1) {
 
                 item = {
                     Name: 'Photos',
@@ -89,7 +94,7 @@
                 list.push(item);
             }
 
-            if (types.indexOf('episode') > -1) {
+            if (types.indexOf('Episode') > -1) {
 
                 item = {
                     Name: 'TV',
@@ -103,7 +108,7 @@
                 list.push(item);
             }
 
-            if (types.indexOf('movie') > -1) {
+            if (types.indexOf('Movie') > -1) {
 
                 item = {
                     Name: 'Movies',
@@ -117,7 +122,7 @@
                 list.push(item);
             }
 
-            if (types.indexOf('video') > -1) {
+            if (types.indexOf('Video') > -1) {
 
                 item = {
                     Name: 'Videos',
@@ -131,7 +136,7 @@
                 list.push(item);
             }
 
-            if (types.indexOf('musicvideo') > -1) {
+            if (types.indexOf('MusicVideo') > -1) {
 
                 item = {
                     Name: 'Music Videos',
@@ -397,6 +402,8 @@
 
     function createLocalItem(libraryItem, serverInfo, jobItem) {
 
+        console.log('[lcoalassetmanager] Begin createLocalItem');
+
         var path = getDirectoryPath(libraryItem, serverInfo);
         var localFolder = filerepository.getFullLocalPath(path);
 
@@ -452,7 +459,6 @@
         var localFilePath = filerepository.getPathFromArray(localPathArray);
 
         return localFilePath;
-
     }
 
     function getItemFileSize(path) {
@@ -474,18 +480,16 @@
 
     function downloadFile(url, localItem) {
 
-        var folder = filerepository.getLocalPath();
         var imageUrl = getImageUrl(localItem.Item.ServerId, localItem.Item.Id, {
             type: 'Primary',
             index: 0
         });
-        return transfermanager.downloadFile(url, folder, localItem, imageUrl);
+        return transfermanager.downloadFile(url, localItem, imageUrl);
     }
 
     function downloadSubtitles(url, fileName) {
 
-        var folder = filerepository.getLocalPath();
-        return transfermanager.downloadSubtitles(url, folder, fileName);
+        return transfermanager.downloadSubtitles(url, fileName);
     }
 
     function getImageUrl(serverId, itemId, imageOptions) {
@@ -494,10 +498,8 @@
         var index = imageOptions.index;
 
         var pathArray = getImagePath(serverId, itemId, imageType, index);
-        var relPath = pathArray.join('/');
 
-        var prefix = 'ms-appdata:///local';
-        return prefix + '/' + relPath;
+        return filerepository.getImageUrl(pathArray);
     }
 
     function hasImage(serverId, itemId, imageType, index) {
@@ -542,8 +544,7 @@
 
         localItem.AdditionalFiles.push(fileInfo);
 
-        var folder = filerepository.getMetadataPath();
-        return transfermanager.downloadImage(url, folder, localFilePath);
+        return transfermanager.downloadImage(url, localFilePath);
     }
 
     function isDownloadFileInQueue(path) {
@@ -694,9 +695,9 @@
         // NOTE: The code inside isFinite does an assignment (=).
         return (
             isFinite(a = a.valueOf()) &&
-            isFinite(b = b.valueOf()) ?
-            (a > b) - (a < b) :
-            NaN
+                isFinite(b = b.valueOf()) ?
+                (a > b) - (a < b) :
+                NaN
         );
     }
 
@@ -712,6 +713,9 @@
         console.groupEnd();
     }
 
+    function enableRepeatDownloading() {
+        return transfermanager.enableRepeatDownloading;
+    }
 
     return {
 
@@ -738,6 +742,7 @@
         resyncTransfers: resyncTransfers,
         getItemsFromIds: getItemsFromIds,
         removeObsoleteContainerItems: removeObsoleteContainerItems,
-        fileExists: fileExists
+        fileExists: fileExists,
+        enableRepeatDownloading: enableRepeatDownloading
     };
 });
